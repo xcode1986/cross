@@ -13,6 +13,7 @@
 #include "view/CAImageView.h"
 #include "view/CAScale9ImageView.h"
 #include "control/CAControl.h"
+#include "view/CALabel.h"
 NS_CC_BEGIN
 
 
@@ -50,6 +51,8 @@ public:
     }
     
     virtual void textViewDidChangeText(CATextView* sender){}
+
+    virtual void textViewDidChangeContentSize(CATextView* sender,int height){}
 };
 
 
@@ -126,6 +129,9 @@ public:
     //BackgroundImage
     void setBackgroundImage(CAImage* image);
     
+    //void setPlaceHolderText(const string & szText);
+    void resetPos(int flag=1);
+    bool m_bAutoAdjustPos=true;
 private:
     bool init();
     
@@ -164,6 +170,11 @@ protected:
     void*                m_pTextView;
     
     DPoint               m_obLastPoint;
+
+public:
+	CALabel* m_pPlaceHolderTips = NULL;
+        
+	void setPlaceHolderText(const std::string &var, CATextAlignment alg = CATextAlignment::Left);
 };
 
 NS_CC_END

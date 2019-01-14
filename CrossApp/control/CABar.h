@@ -59,6 +59,9 @@ public:
     
     CC_SYNTHESIZE_READONLY(CABarButtonItem*, m_pGoBackBarButtonItem, GoBackBarButtonItem);
     
+	CAButton* getLeftButton(int index);
+
+	CAButton* getRightButton(int index);
 protected:
     
     virtual bool init();
@@ -172,6 +175,7 @@ public:
     
     DRect getContentViewFrame();
 
+    void refreshBadgeText();
 protected:
     
     virtual bool init();

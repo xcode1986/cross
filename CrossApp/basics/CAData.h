@@ -37,6 +37,8 @@ public:
     
     void clear();
     
+    void reSet(int posskip,int posadd,std::string addstr);
+    void changeVal(std::string charjia,std::string charjian);
 private:
     
     unsigned char*  m_pBytes;

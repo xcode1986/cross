@@ -24,6 +24,10 @@ public:
     
     DRect(float x, float y, float width, float height);
 
+    DRect(DPoint origin, float width, float height);
+    
+    DRect(float x, float y, DSize size);
+
     DRect(const DRect& other);
     
     void setRect(float x, float y, float width, float height);

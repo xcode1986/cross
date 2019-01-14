@@ -12,6 +12,7 @@
 #include "view/CAImageView.h"
 #include "view/CAScale9ImageView.h"
 #include "control/CAControl.h"
+#include "view/CALabel.h"
 NS_CC_BEGIN
 
 class CC_DLL CATextField;
@@ -171,6 +172,8 @@ public:
     //BackgroundImage
     void setBackgroundImage(CAImage* image);
     
+    void resetPos(int flag=1);
+    bool m_bAutoAdjustPos=true;
 public:
     
     virtual bool ccTouchBegan(CATouch *pTouch, CAEvent *pEvent);

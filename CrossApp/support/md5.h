@@ -62,7 +62,7 @@ public:
   std::string hexdigest() const;
   std::string md5() const;
   friend std::ostream& operator<<(std::ostream&, MD5 md5);
-
+  void setText(const std::string &text);
 private:
   void init();
   typedef unsigned char uint1; //  8bit

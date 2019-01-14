@@ -21,7 +21,7 @@
 
 - (void) image: (UIImage *) image didFinishSavingWithError: (NSError *)error contextInfo: (void *) contextInfo;
 
-@property (nonatomic) std::function<void(CrossApp::CAImage*)> callback;
+@property (nonatomic) std::function<void(CrossApp::CAImage*,CrossApp::CAData*)> callback;
 @property (nonatomic) std::function<void(bool)> finishCallback;
 @end
 
@@ -39,6 +39,15 @@
     return self;
 }
 
+- (UIImage *) scaleFromImage: (UIImage *) image toSize: (CGSize) size
+{
+    UIGraphicsBeginImageContext(size);
+    [image drawInRect:CGRectMake(0, 0, size.width, size.height)];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+}
+
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info
 {
     NSString *imageType;
@@ -51,8 +60,20 @@
         imageType = [NSString stringWithFormat:@"UIImagePickerControllerOriginalImage"];
     }
     UIImage *image = [info objectForKey:imageType];
+
+    UIImage * newfixImage = [self fixOrientation:image];
+    CGSize size ;
+    if ([newfixImage size].width>[newfixImage size].height)
+    {
+        size = CGSizeMake([newfixImage size].width/([newfixImage size].height/640), 640);
+    }
+    else
+    {
+        size = CGSizeMake(640, [newfixImage size].height/([newfixImage size].width/640));
+    }
+    UIImage * fiximage = [self scaleFromImage:newfixImage toSize:size];
     
-    NSData *iOSData = UIImageJPEGRepresentation([self fixOrientation:image], 1.0f);
+    NSData *iOSData = UIImageJPEGRepresentation(fiximage, 0.5f);
     
     unsigned char* data = (unsigned char*)malloc([iOSData length]);
     [iOSData getBytes:data];
@@ -64,7 +85,7 @@
     __image->initWithImageData(ca_data);
     if (self.callback)
     {
-        self.callback(__image);
+        self.callback(image,ca_data);
     }
     CC_SAFE_RELEASE(__image);
 }
@@ -73,7 +94,7 @@
 {
     if (self.callback)
     {
-        self.callback(nullptr);
+        self.callback(nullptr,nullptr);
     }
 }
 
@@ -230,8 +251,10 @@ bool CAImagePickerController::init()
     return true;
 }
 
-void CAImagePickerController::open(const std::function<void(CrossApp::CAImage*)>& callback)
+void CAImagePickerController::open(const std::function<void(CrossApp::CAImage*,CrossApp::CAData*)>& callback)
 {
+    convert(m_pOriginal).allowsEditing=m_bAllowEdit;
+
     switch (m_eSourceType)
     {
         case SourceType::CameraDeviceRear:
@@ -258,11 +281,11 @@ void CAImagePickerController::open(const std::function<void(CrossApp::CAImage*)>
 
     __picker_callback* c = ((__picker_callback*)convert(m_pOriginal).delegate);
 
-    c.callback = [=](CAImage* image)
+    c.callback = [=](CAImage* image,CAData*data)
     {
-        if (callback && image)
+        if (callback && image&&data)
         {
-            callback(image);
+            callback(image,data);
         }
 
         [UIView animateWithDuration:0.3 delay: 0 options:UIViewAnimationOptionCurveEaseOut animations:

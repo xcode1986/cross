@@ -121,6 +121,9 @@ CAView::~CAView(void)
     CC_SAFE_RELEASE_NULL(m_pGlProgramState);
     CAScheduler::getScheduler()->pauseTarget(this);
 
+    if(m_pobImage)
+        m_pobImage->removeAttachView(this);
+
     if (!m_obSubviews.empty())
     {
         for (auto& subview : m_obSubviews)
@@ -1035,13 +1038,28 @@ void CAView::updateDraw()
     CAView* v = m_pSuperview;
     if (v)
     {
-        while (v == v->getSuperview())
+        while (v)
         {
             CC_BREAK_IF(v == nullptr);
             CC_RETURN_IF(!v->isVisible());
+            v= v->getSuperview();
         }
+        CAApplication::getApplication()->updateDraw();
     }
-    CAApplication::getApplication()->updateDraw();
+    
+    //modify by zmr 这种优化方案有问题，当只有一个view，并且是setvisible为false引起的更新时，会导致页面始终不更新
+    /*if(this->isVisible()==false)
+        return;
+    CAView* v = this->getSuperview();
+    if(v==NULL)
+        return;
+    while (v )
+    {
+        CC_BREAK_IF(v == NULL);
+        CC_RETURN_IF(v->isVisible()==false);
+        v=v->getSuperview();
+    }
+    CAApplication::getApplication()->updateDraw();*/
 }
 
 CAView* CAView::getSubviewByTag(int aTag)
@@ -1107,7 +1125,10 @@ void CAView::insertSubview(CAView* subview, int z)
         subview->onEnterTransitionDidFinish();
     }
 }
-
+void CAView::removeFromArrayOnly(CAView*subview)
+{
+    m_obSubviews.eraseObject(subview);
+}
 void CAView::removeFromSuperview()
 {
     if (m_pSuperview != NULL)
@@ -1237,6 +1258,8 @@ void CAView::draw()
 void CAView::draw(Renderer* renderer, const Mat4 &transform, uint32_t flags)
 {
     CC_RETURN_IF(m_pobImage == nullptr);
+    //add by zmr 处理net图片没数据黑块问题
+    CC_RETURN_IF(m_pobImage->getData() == nullptr);
     
     if(m_bInsideBounds)
     {
@@ -1313,6 +1336,29 @@ bool CAView::isVisitableByVisitingCamera() const
 void CAView::visit(Renderer* renderer, const Mat4 &parentTransform, uint32_t parentFlags)
 {
     CC_RETURN_IF(!m_bVisible);
+    if(m_pApplication->m_bNowPrint==false)
+    {
+        CAView* v = this->getSuperview();
+        while (v)
+        {
+            CC_RETURN_IF(v->isVisible() == false);
+            v = v->getSuperview();
+        }
+    }
+    if(m_pApplication->m_bNowPrint==false&&this->getTextTag()!="ingoreVisitSpeed")//对于部分子节点超出父节点范围的node，如果父节点提前return了，会导致子节点无法显示,需要自行设置不参与优化
+    {
+        DRect rt=this->getBounds();
+        rt=this->convertRectToWorldSpace(rt);
+        //CCLog("%lf,%lf,%lf,%lf",rt.origin.x,rt.origin.y,rt.size.width,rt.size.height);
+        if(rt.origin.x<-1000&&rt.origin.x+rt.size.width<-1000)
+            return;
+        if(rt.origin.y<-1000&&rt.origin.y+rt.size.height<-1000)
+            return;
+        if(rt.origin.x>CAApplication::getApplication()->getWinSize().width+1000)
+            return;
+        if(rt.origin.y>CAApplication::getApplication()->getWinSize().height+1000)
+            return;
+    }
     
     uint32_t flags = processParentFlags(parentTransform, parentFlags);
     
@@ -1498,6 +1544,8 @@ void CAView::onEnterTransitionDidFinish()
 
 void CAView::onExitTransitionDidStart()
 {
+    //CAViewAnimation::removeAnimationsWithView(this);//modify by zmr add
+    CAScheduler::getScheduler()->unscheduleAllForTarget(this);
     if (m_obOnExitTransitionDidStartCallback)
     {
         m_obOnExitTransitionDidStartCallback();
@@ -1860,6 +1908,10 @@ void CAView::setDisplayRange(bool value)
 
 void CAView::setImage(CAImage* image)
 {
+    if(m_pobImage)
+        m_pobImage->removeAttachView(this);
+    if(image)
+        image->addAttachView(this);
     CC_SAFE_RETAIN(image);
     CC_SAFE_RELEASE(m_pobImage);
     m_pobImage = image;
@@ -2028,8 +2080,7 @@ void CAView::setAlpha(float alpha)
 void CAView::updateDisplayedAlpha(float superviewAlpha)
 {
 	_displayedAlpha = _realAlpha * superviewAlpha;
-	
-    if (!m_obSubviews.empty())
+    //注意setAlpha的调用有时机问题，如果只想要父类透明，那就先对自身进行setAlpha设置（在子节点加入到父节点之前调用）。否则会影响到所有子节点的渲染。setAlpha的机制是会对当前设置的节点（包括它的子节点均起作用）    if (!m_obSubviews.empty())
     {
         CAVector<CAView*>::iterator itr;
         for (itr=m_obSubviews.begin(); itr!=m_obSubviews.end(); itr++)
@@ -2403,5 +2454,43 @@ void CAView::drawBottomShadow(Renderer* renderer, const Mat4 &transform, uint32_
     }
 }
 
+DSize CAView::getSize()
+{
+    return m_obContentSize;
+}
+DPoint CAView::getViewCenter()
+{
+    return DPoint(m_obContentSize.width / 2, m_obContentSize.height / 2);
+}
+void CAView::delayShow(float second)
+{
+	CAScheduler::getScheduler()->unschedule("delayShow", this);
+	CAScheduler::getScheduler()->scheduleOnce([=](float){
+		CAImageView* imageView = dynamic_cast<CAImageView*>(this);
+		if (imageView)
+		{
+			imageView->startAnimating();
+		}
+		setVisible(true);
+	}, "delayShow", this, second);
+}
+void CAView::delayHide(float second)
+{
+	CAScheduler::getScheduler()->unschedule("delayHide", this);
+	CAScheduler::getScheduler()->scheduleOnce([=](float){
+		setVisible(false);
+	}, "delayHide", this, second);
+}
+void CAView::delayDissmiss(float second)
+{
+	CAScheduler::getScheduler()->unschedule("delayDissmiss", this);
+	CAScheduler::getScheduler()->scheduleOnce([=](float){
+		removeFromSuperview();
+	}, "delayDissmiss", this, second);
+}
+void CAView::setDynamicVisit(bool bdynamic)
+{
+    m_bDynamicVisit=bdynamic;
+}
 
 NS_CC_END;

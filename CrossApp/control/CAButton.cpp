@@ -36,14 +36,16 @@ CAButton::CAButton(const CAButton::Type& buttonType)
 ,m_bTouchClick(true)
 {
     m_mImageColors[CAControl::State::Normal] = CAColor4B::WHITE;
-    m_mImageColors[CAControl::State::Highlighted] = CAColor4B::WHITE;
+    m_mImageColors[CAControl::State::Highlighted] = ccc4(127,127,127,255);
     m_mImageColors[CAControl::State::Disabled] = CAColor4B::WHITE;
     
     m_mTitleColors[CAControl::State::Normal] = CAColor4B::BLACK;
-    m_mTitleColors[CAControl::State::Highlighted] = CAColor4B::BLACK;
+    m_mTitleColors[CAControl::State::Highlighted] = ccc4(127,127,127,255);
     m_mTitleColors[CAControl::State::Disabled] = CAColor4B::BLACK;
     
     m_pImageView = new CAImageView();
+    //add by zmr
+    m_pImageView->setScaleType(CAImageView::ScaleType::FitImageInside);
     m_pImageView->init();
     this->insertSubview(m_pImageView, 1);
     
@@ -263,6 +265,13 @@ void CAButton::setImageForState(CAControl::State state, CAImage* var)
     if (var)
     {
         m_mImages.insert(state, var);
+        //add by zmr
+        if(getControlState()==state)
+        {
+            //m_pImageView->setImage(var);
+            var->addAttachView(m_pImageView);
+            //CCLog("CAButton::setImageForState::normal %0x,%0x",var,m_pImageView);
+        }
     }
 
     if (m_bRunning)
@@ -478,6 +487,11 @@ void CAButton::setControlState(CAControl::State var)
     {
         DSize size = m_obContentSize;
         DSize iSize = image->getContentSize();
+        //add by zmr 对于网络图片，初始时没有数据，iszie为0，会导致m_pImageView无法设置frame
+        if(iSize.equals(DSizeZero))
+        {
+            iSize=size;
+        }
         float scaleX = size.width / iSize.width * 0.75f;
         float scaleY = size.height / iSize.height * 0.75f;
         float scale = MIN(scaleX, scaleY);
@@ -495,6 +509,11 @@ void CAButton::setControlState(CAControl::State var)
     {
         DSize size = m_obContentSize;
         DSize iSize = image->getContentSize();
+        //add by zmr 对于网络图片，初始时没有数据，iszie为0，会导致m_pImageView无法设置frame
+        if(iSize.equals(DSizeZero))
+        {
+            iSize=size;
+        }
         float scaleX = size.width / iSize.width * 0.6f;
         float scaleY = size.height / iSize.height * 0.54f;
         float scale = MIN(scaleX, scaleY);

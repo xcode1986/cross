@@ -213,7 +213,7 @@ void CAPageView::setCurrPage(int var, bool animated, bool listener)
     
     m_nCurrPage = var;
     
-    if (animated)
+    //if (animated)
     {
         if (m_eOrientation == CAPageView::Orientation::Horizontal)
         {
@@ -224,7 +224,7 @@ void CAPageView::setCurrPage(int var, bool animated, bool listener)
             this->setContentOffset(DPoint(0, m_nCurrPage * (m_obContentSize.height + m_fSpacing)), animated);
         }
     }
-    else
+    if (animated == false)
     {
         this->contentOffsetFinish();
     }

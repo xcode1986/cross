@@ -76,6 +76,7 @@ public:
     
     void unsizeToFit();
     
+    void setAlignment(const CAAlignment &var);
 protected:
 
     virtual void setContentSize(const DSize& var);

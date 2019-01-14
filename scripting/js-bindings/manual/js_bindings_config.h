@@ -56,8 +56,9 @@
     if( ! (condition) ) {                                                       \
         CrossApp::CCLog("jsb: ERROR: File %s: Line: %d, Function: %s", __FILE__, __LINE__, __FUNCTION__ );         \
          CrossApp::CCLog(__VA_ARGS__);                                        \
-        if( ! JS_IsExceptionPending( context ) ) {                          \
-            JS_ReportError( context, __VA_ARGS__ );                             \
+        JSContext* globalContext = ScriptingCore::getInstance()->getGlobalContext();    \
+        if( ! JS_IsExceptionPending( globalContext ) ) {                                \
+            JS_ReportError( globalContext, __VA_ARGS__ );                               \
         }                                                                       \
         return ret_value;                                                       \
     }                                                                           \

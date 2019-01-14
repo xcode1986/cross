@@ -9,6 +9,8 @@
 
 NS_CC_BEGIN
 
+std::map<void *, int> CAObject::needCheckObjVecs;
+std::map<void *, int> CAObject::canCheckObjVecs;
 CAObject::CAObject(void)
 : m_uReference(1) // when the object is created, the reference count of it is 1
 , m_uAutoReleaseCount(0)
@@ -117,5 +119,56 @@ void CAObject::cancelPreviousPerformRequests(SEL_CallFuncO callFunc)
     CAScheduler::getScheduler()->unschedule(crossapp_format_string("performO:%x", callFunc), this);
 }
 
-
+void CAObject::setCheckExist(bool bCheck)
+{
+    CCLog("setCheckExist %p", this);
+    if (bCheck)
+    {
+        needCheckObjVecs[this] = 1;
+        canCheckObjVecs[this]=1;
+    }
+    else
+    {
+        canCheckObjVecs[this]=0;
+        removeCheck(this);
+    }
+}
+bool CAObject::canCheckExist(void * pObj)
+{
+    //CCLog("%p", pObj);
+    if (pObj == NULL)
+    {
+        return false;
+    }
+    auto ite = canCheckObjVecs.find(pObj);
+    if (ite != canCheckObjVecs.end() && ite->second == 1)
+    {
+        return true;
+    }
+    return  false;
+}
+bool CAObject::isExist(void * pObj)
+{
+    //CCLog("%p", pObj);
+    if (pObj == NULL)
+    {
+        return false;
+    }
+    auto ite = needCheckObjVecs.find(pObj);
+    if (ite != needCheckObjVecs.end() && ite->second == 1)
+    {
+        return true;
+    }
+    return  false;
+}
+bool CAObject::removeCheck(void * pObj)
+{
+    std::map<void *, int>::iterator ite=needCheckObjVecs.find(pObj);
+    if (ite!= needCheckObjVecs.end())
+    {
+        needCheckObjVecs[pObj] = 0;
+        needCheckObjVecs.erase(ite);
+    }
+    return true;
+}
 NS_CC_END

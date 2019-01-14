@@ -70,6 +70,9 @@ CAScrollView::~CAScrollView()
 
 void CAScrollView::onEnterTransitionDidFinish()
 {
+    //add by zmr
+    this->layoutPullToRefreshView();
+
     CAView::onEnterTransitionDidFinish();
 }
 
@@ -80,6 +83,7 @@ void CAScrollView::onExitTransitionDidStart()
     m_tPointOffset.clear();
     m_tInertia = DPointZero;
     this->setScrollRunning(false);
+    CAView::onExitTransitionDidStart();
 }
 
 CAScrollView* CAScrollView::createWithFrame(const DRect& rect)
@@ -135,7 +139,14 @@ bool CAScrollView::init()
     this->initIndicator();
     return true;
 }
-
+void CAScrollView::selfAddSubview(CAView* subview)
+{
+    CAView::insertSubview(subview,subview->getZOrder());
+}
+void CAScrollView::selfRemoveSubview(CAView* subview)
+{
+    CAView::removeSubview(subview);
+}
 void CAScrollView::addSubview(CAView* subview)
 {
     do
@@ -196,7 +207,13 @@ const CAVector<CAView*>& CAScrollView::getSubviews()
 {
     return m_pContainer->getSubviews();
 }
-
+void CAScrollView::setViewSizeDirect(const DSize& var)
+{
+    if (m_pContainer)
+    {
+        m_pContainer->setContentSize(var);
+    }
+}
 void CAScrollView::setViewSize(const DSize& var)
 {
     m_obViewSize = var;
@@ -453,10 +470,27 @@ void CAScrollView::setBackgroundImage(CAImage* image, bool isScale9)
             backgroundView->setLayout(DLayoutFill);
             CAView::insertSubview(backgroundView, -1);
             m_pBackgroundView = backgroundView;
+            backgroundView->setScaleType(CAImageView::ScaleType::FitImageCrop);
         }
     }
 }
-
+void CAScrollView::setBackgroundImageView(CAImageView* backgroundView)
+{
+    CAView::removeSubview(m_pBackgroundView);
+    
+    backgroundView->setLayout(DLayoutFill);
+    CAView::insertSubview(backgroundView, -1);
+    m_pBackgroundView = backgroundView;
+    backgroundView->setScaleType(CAImageView::ScaleType::FitImageCrop);
+}
+void CAScrollView::setBackgroundView(CAView* backgroundView)
+{
+    CAView::removeSubview(m_pBackgroundView);
+    
+    backgroundView->setLayout(DLayoutFill);
+    CAView::insertSubview(backgroundView, -1);
+    m_pBackgroundView = backgroundView;
+}
 void CAScrollView::setZoomScale(float zoom)
 {
     zoom = MAX(zoom, m_fMinimumZoomScale);
@@ -521,7 +555,10 @@ bool CAScrollView::ccTouchBegan(CATouch *pTouch, CAEvent *pEvent)
             this->stopDeaccelerateScroll();
             m_tCloseToPoint = this->getViewSize();
             m_tInitialPoint = m_tCloseToPoint;
-            
+            if (m_obTouchDown)
+            {
+                m_obTouchDown(pTouch->getLocation());
+            }
             CAScheduler::getScheduler()->schedule(schedule_selector(CAScrollView::updatePointOffset), this, 0);
         }
         else if (m_vTouches.size() == 2)
@@ -1357,7 +1394,20 @@ bool CAScrollView::isFooterRefreshing()
 {
     return m_pFooterRefreshView && m_pFooterRefreshView->isRefreshing();
 }
-
+void CAScrollView::setViewSizeAutoFit()
+{
+	DSize viewSize = getFrame().size;
+	DRect viewFrame;
+	for (auto& view : getSubviews())
+	{
+		viewFrame = view->getFrame();
+		if (viewFrame.getMaxX() > viewSize.width)
+			viewSize.width = viewFrame.getMaxX();
+		if (viewFrame.getMaxY() > viewSize.height)
+			viewSize.height = viewFrame.getMaxY();
+	}
+	CAScrollView::setViewSize(viewSize);
+}
 #pragma CAIndicator
 
 CAIndicator::CAIndicator(CAIndicator::Orientation type, CAScrollView* var)
@@ -1383,8 +1433,9 @@ void CAIndicator::onEnterTransitionDidFinish()
 
 void CAIndicator::onExitTransitionDidStart()
 {
-    CAView::onExitTransitionDidStart();
+    CAViewAnimation::removeAnimations(m_s__StrID);
     this->setAlpha(0.0f);
+    CAView::onExitTransitionDidStart();
 }
 
 CAIndicator* CAIndicator::create(CAIndicator::Orientation type, CAScrollView* var)
@@ -1509,10 +1560,12 @@ void CAIndicator::setHide(bool var)
     else
     {
         CC_RETURN_IF(1.0f-this->getAlpha() > FLT_EPSILON);
-        CAViewAnimation::beginAnimations(m_s__StrID);
+        //modify by zmr 使用动画会造成概率性闪退，如果触发了滚动条的sethide，然后页面又刚好退出
+        /*CAViewAnimation::beginAnimations(m_s__StrID);
         CAViewAnimation::setAnimationDuration(0.3f);
         this->setAlpha(0.0f);
-        CAViewAnimation::commitAnimations();
+        CAViewAnimation::commitAnimations();*/
+        this->setAlpha(0.0f);
     }
 }
 

@@ -204,7 +204,32 @@ void CAImageCache::waitForQuit()
 
 CAImage* CAImageCache::addImage(const std::string& path)
 {
-    if (path.empty())
+    string spathnew=path;
+    //modify by zmr
+    if(!CAApplication::getApplication()->m_sResExtAdd.empty())
+    {
+        if (!CCFileUtils::sharedFileUtils()->isAbsolutePath(spathnew))
+        {
+            std::string file = spathnew;
+            std::string file_name = spathnew;
+            std::string file_path=spathnew;
+            size_t pos = file.find_last_of("/");
+            if (pos != std::string::npos)
+            {
+                file_name = file.substr(pos+1);
+                file_path=file.substr(0,pos+1);
+                string snewname=file_name.substr(0,1)+CAApplication::getApplication()->m_sResExtAdd+file_name.substr(1);
+                spathnew=file_path+snewname;
+            }
+            else
+            {
+                string snewname=file_name.substr(0,1)+CAApplication::getApplication()->m_sResExtAdd+file_name.substr(1);
+                spathnew=snewname;
+            }
+        }
+    }
+    
+    if (spathnew.empty())
     {
         return NULL;
     }
@@ -213,11 +238,11 @@ CAImage* CAImageCache::addImage(const std::string& path)
     
     //pthread_mutex_lock(m_pDictLock);
 
-    image = m_mImages.at(path);
+    image = m_mImages.at(spathnew);
 
     if (!image)
     {
-        std::string lowerCase(path);
+        std::string lowerCase(spathnew);
         for (unsigned int i = 0; i < lowerCase.length(); ++i)
         {
             lowerCase[i] = tolower(lowerCase[i]);
@@ -226,10 +251,10 @@ CAImage* CAImageCache::addImage(const std::string& path)
         do
         {
             image = new CAImage();
-            if(image != NULL && image->initWithImageFile(path.c_str()))
+            if(image != NULL && image->initWithImageFile(spathnew.c_str()))
             {
-                m_mImages.erase(path);
-                m_mImages.insert(path, image);
+                m_mImages.erase(spathnew);
+                m_mImages.insert(spathnew, image);
                 image->release();
             }
             else

@@ -3061,5 +3061,38 @@ void CAImage::purgeCAImage()
     CC_SAFE_DELETE(s_shadow_bottom_image);
     s_shadow_bottom_image = nullptr;
 }
-
+CAView*CAImage::getAttachView(int index)
+{
+    if(index<0||index>=m_attachViews.size())
+        return nullptr;
+    return m_attachViews.at(index);
+}
+void CAImage::removeAttachView(CAView*pviwe)
+{
+    std::vector<CAView*>::iterator ite;
+    for(ite=m_attachViews.begin();ite!=m_attachViews.end();ite++)
+    {
+        if(*ite==pviwe)
+        {
+            m_attachViews.erase(ite);
+            break;
+        }
+    }
+}
+void CAImage::addAttachView(CAView*pview)
+{
+    std::vector<CAView*>::iterator ite;
+    for(ite=m_attachViews.begin();ite!=m_attachViews.end();ite++)
+    {
+        if(*ite==pview)
+        {
+            return;
+        }
+    }
+    m_attachViews.push_back(pview);
+}
+int CAImage::getAttachViewLength()
+{
+    return m_attachViews.size();
+}
 NS_CC_END

@@ -28,6 +28,7 @@ bool js_crossapp_CAObject_getTag(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAObject_retainCount(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAObject_getStrID(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAObject_getTextTag(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAObject_isNativeObjExist(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAObject_CAObject(JSContext *cx, uint32_t argc, jsval *vp);
 
 extern JSClass  *jsb_CrossApp_CAScheduler_class;
@@ -83,6 +84,8 @@ bool js_crossapp_CAData_fastSet(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAData_copyString(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAData_copy(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAData_getBytes(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAData_reSet(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAData_changeVal(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAData_create(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAData_CAData(JSContext *cx, uint32_t argc, jsval *vp);
 
@@ -163,6 +166,8 @@ bool js_crossapp_CAImage_CLEAR_IMAGE(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAImage_generateMipmapsWithImage(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAImage_createWithString(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAImage_CAImage(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAImage_getAttachViewLength(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAImage_getAttachView(JSContext *cx, uint32_t argc, jsval *vp);
 
 extern JSClass  *jsb_CrossApp_CATouch_class;
 extern JSObject *jsb_CrossApp_CATouch_prototype;
@@ -277,6 +282,7 @@ bool js_crossapp_CAView_removeFromSuperview(JSContext *cx, uint32_t argc, jsval 
 bool js_crossapp_CAView_enabledTopShadow(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAView_setLayout(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAView_setOpacityModifyRGB(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAView_getViewNavigationController(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAView_getSuperview(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAView_getSubviewByTag(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAView_setOnExitCallback(JSContext *cx, uint32_t argc, jsval *vp);
@@ -315,6 +321,7 @@ bool js_crossapp_CAView_setonExitTransitionDidStartCallback(JSContext *cx, uint3
 bool js_crossapp_CAView_removeAllSubviews(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAView_reViewlayout(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAView_getSubviewByTextTag(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAView_removeFromArrayOnly(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAView_removeSubviewByTextTag(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAView_convertRectToNodeSpace(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAView_getonExitTransitionDidStartCallback(JSContext *cx, uint32_t argc, jsval *vp);
@@ -409,6 +416,7 @@ bool js_crossapp_CAView_createWithFrame(JSContext *cx, uint32_t argc, jsval *vp)
 bool js_crossapp_CAView_createWithColor(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAView_createWithLayout(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAView_createWithCenter(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAView_convertTouchToNodeSpace(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAView_CAView(JSContext *cx, uint32_t argc, jsval *vp);
 
 extern JSClass  *jsb_CrossApp_CAImageView_class;
@@ -426,6 +434,7 @@ bool js_crossapp_CAImageView_setImage(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAImageView_getAnimationImages(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAImageView_initWithImage(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAImageView_setAnimationImages(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAImageView_setAnimationImagePaths(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAImageView_setImageAsyncWithFile(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAImageView_init(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAImageView_setAnimationDuration(JSContext *cx, uint32_t argc, jsval *vp);
@@ -435,6 +444,9 @@ bool js_crossapp_CAImageView_setImageRect(JSContext *cx, uint32_t argc, jsval *v
 bool js_crossapp_CAImageView_setScaleType(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAImageView_getImage(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAImageView_startAnimating(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAImageView_startAnimatingAsync(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAImageView_AnimationImagePaths(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAImageView_stopAnimatingAsync(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAImageView_setAnimationRepeatCount(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAImageView_createWithFrame(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAImageView_create(JSContext *cx, uint32_t argc, jsval *vp);
@@ -613,6 +625,7 @@ bool js_crossapp_CAApplication_purgeCachedData(JSContext *cx, uint32_t argc, jsv
 bool js_crossapp_CAApplication_getTotalFrames(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAApplication_pause(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAApplication_setThemeManager(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAApplication_createThemeManagerWithPath(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAApplication_restart(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAApplication_loadIdentityMatrix(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAApplication_isDisplayStats(JSContext *cx, uint32_t argc, jsval *vp);
@@ -660,6 +673,7 @@ bool js_crossapp_CAButton_setTitleFont(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAButton_setTitleColorForState(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAButton_setImageColorForState(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAButton_setBackgroundImageForState(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAButton_setBackgroundViewForState(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAButton_setTitleForState(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAButton_getImageForState(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAButton_setTitleTextAlignment(JSContext *cx, uint32_t argc, jsval *vp);
@@ -828,6 +842,7 @@ void js_crossapp_CATabBar_finalize(JSContext *cx, JSObject *obj);
 void js_register_crossapp_CATabBar(JSContext *cx, JS::HandleObject global);
 void register_all_crossapp(JSContext* cx, JS::HandleObject obj);
 bool js_crossapp_CATabBar_setSelectedBackgroundImage(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CATabBar_refreshBadgeText(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CATabBar_onSelectedItem(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CATabBar_getItemSize(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CATabBar_replaceItemAtIndex(JSContext *cx, uint32_t argc, jsval *vp);
@@ -929,9 +944,12 @@ bool js_crossapp_CAScrollView_setShowsHorizontalScrollIndicator(JSContext *cx, u
 bool js_crossapp_CAScrollView_setTouchEnabledAtSubviews(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAScrollView_getZoomScale(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAScrollView_endFooterRefresh(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAScrollView_onTouchDown(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAScrollView_onTouchUpWithoutMoved(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAScrollView_setFooterRefreshView(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAScrollView_getHeaderRefreshView(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAScrollView_selfAddSubview(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAScrollView_selfRemoveSubview(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAScrollView_setShowsVerticalScrollIndicator(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAScrollView_setContentOffset(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAScrollView_isBounceHorizontal(JSContext *cx, uint32_t argc, jsval *vp);
@@ -955,6 +973,7 @@ bool js_crossapp_CAScrollView_getViewSize(JSContext *cx, uint32_t argc, jsval *v
 bool js_crossapp_CAScrollView_setMaximumZoomScale(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAScrollView_isZooming(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAScrollView_setBackgroundImage(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CAScrollView_setBackgroundView(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAScrollView_onStopMoved(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAScrollView_isShowsHorizontalScrollIndicator(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CAScrollView_switchPCMode(JSContext *cx, uint32_t argc, jsval *vp);
@@ -1069,6 +1088,9 @@ bool js_crossapp_CANavigationController_setNavigationBarBackgroundImage(JSContex
 bool js_crossapp_CANavigationController_getNavigationBarButtonColor(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CANavigationController_popViewControllerAtIndex(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CANavigationController_setNavigationBarButtonColor(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CANavigationController_getNavigationBar(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CANavigationController_getNavigationBarHeight(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CANavigationController_getNavigationBarClearance(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CANavigationController_CANavigationController(JSContext *cx, uint32_t argc, jsval *vp);
 
 extern JSClass  *jsb_CrossApp_CATabBarController_class;
@@ -2300,6 +2322,7 @@ bool js_crossapp_CATextView_setTextColor(JSContext *cx, uint32_t argc, jsval *vp
 bool js_crossapp_CATextView_setReturnType(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CATextView_resignFirstResponder(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CATextView_setText(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_CATextView_setPlaceHolderText(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CATextView_onDidChangeText(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CATextView_becomeFirstResponder(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_CATextView_onKeyBoardHeight(JSContext *cx, uint32_t argc, jsval *vp);
@@ -3502,5 +3525,14 @@ bool js_crossapp_SimpleAudioEngine_resumeEffect(JSContext *cx, uint32_t argc, js
 bool js_crossapp_SimpleAudioEngine_end(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_SimpleAudioEngine_sharedEngine(JSContext *cx, uint32_t argc, jsval *vp);
 bool js_crossapp_SimpleAudioEngine_SimpleAudioEngine(JSContext *cx, uint32_t argc, jsval *vp);
+
+extern JSClass  *jsb_CrossApp_MD5_class;
+extern JSObject *jsb_CrossApp_MD5_prototype;
+bool js_crossapp_MD5_constructor(JSContext *cx, uint32_t argc, jsval *vp);
+void js_crossapp_MD5_finalize(JSContext *cx, JSObject *obj);
+void js_register_crossapp_MD5(JSContext *cx, JS::HandleObject global);
+void register_all_crossapp(JSContext* cx, JS::HandleObject obj);
+bool js_crossapp_MD5_md5(JSContext *cx, uint32_t argc, jsval *vp);
+bool js_crossapp_MD5_setText(JSContext *cx, uint32_t argc, jsval *vp);
 
 #endif // __crossapp_h__

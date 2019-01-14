@@ -87,6 +87,19 @@ public:
     const std::string& getStrID(){ return m_s__StrID; }
 
     friend class CAAutoreleasePool;
+
+    //设置检查是否存在
+    void setCheckExist(bool bCheck = true);
+    
+    static bool canCheckExist(void * pObj);
+    
+    static bool isExist(void * pObj);
+    
+    static bool removeCheck(void * pObj);
+    
+    static std::map<void *, int> needCheckObjVecs;
+    
+    static std::map<void *, int> canCheckObjVecs;
 };
 
 #define callfunc_selector(_SELECTOR) static_cast<CrossApp::SEL_CallFunc>(&_SELECTOR)

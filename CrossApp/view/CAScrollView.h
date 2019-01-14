@@ -77,6 +77,7 @@ public:
     
     CC_LISTENING_FUNCTION(void(), FooterBeginRefreshing);
     
+    CC_LISTENING_FUNCTION(void(DPoint), TouchDown);
 public:
 
     CAScrollView();
@@ -118,7 +119,8 @@ public:
     DPoint getContentOffset();
     
     void setBackgroundImage(CAImage* image, bool isScale9 = false);
-
+    void setBackgroundImageView(CAImageView* backgroundView);
+    void setBackgroundView(CAView* backgroundView);
     void setZoomScale(float zoom);
 
     virtual bool isReachBoundaryLeft() override;
@@ -177,6 +179,14 @@ public:
     
     virtual void switchPCMode(bool var);
     
+    CAView * getContainer()
+    {
+        return m_pContainer;
+    }
+    void setViewSizeDirect(const DSize& var);
+    void setViewSizeAutoFit();
+    void selfAddSubview(CAView* subview);
+    void selfRemoveSubview(CAView* subview);
 protected:
  
     inline virtual float minSpeed(float dt)
@@ -223,8 +233,10 @@ protected:
 
     void updateIndicator();
     
+public:
     void layoutPullToRefreshView();
     
+protected:
     void changedFromPullToRefreshView();
     
     void detectionFromPullToRefreshView();

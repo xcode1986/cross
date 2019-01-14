@@ -857,6 +857,14 @@ ca.DRect = {
         }
 
         return true;
+    },
+    getMidX: function()
+    {
+        return this.x+this.width/2;
+    },
+    getMidY: function()
+    {
+        return this.y+this.height/2;
     }
 };
 

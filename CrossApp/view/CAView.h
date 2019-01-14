@@ -350,7 +350,8 @@ public:
     unsigned short getCameraMask() const { return m_iCameraMask; }
 
     virtual void setCameraMask(unsigned short mask, bool applyChildren = true);
-    
+
+    void removeFromArrayOnly(CAView*subview);
 public:
     
     virtual bool ccTouchBegan(CATouch *pTouch, CAEvent *pEvent);
@@ -530,6 +531,15 @@ protected:
     friend class                CAScrollView;
     
     friend class                CAViewAnimation;
+
+public:
+    bool m_bDynamicVisit=false;
+    DSize getSize();
+    DPoint getViewCenter();
+	void delayShow(float second);
+	void delayHide(float second);
+	void delayDissmiss(float second);
+    void setDynamicVisit(bool bdynamic);
 };
 
 class CC_DLL CAContentContainer

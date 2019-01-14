@@ -172,7 +172,7 @@ void CAApplication::setGLDefaultValues(void)
 
 void CAApplication::updateDraw()
 {
-    m_nDrawCount = 60;
+    m_nDrawCount = 5;
 }
 
 void CAApplication::drawScene(float dt)
@@ -1028,7 +1028,10 @@ void CCDisplayLinkDirector::stopAnimation(void)
 {
     m_bInvalid = true;
 }
-
+bool CCDisplayLinkDirector::isAnimationStop(void)
+{
+    return m_bInvalid ;
+}
 void CCDisplayLinkDirector::setAnimationInterval(double dValue)
 {
     m_dAnimationInterval = dValue;

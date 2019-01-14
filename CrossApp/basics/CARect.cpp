@@ -27,6 +27,16 @@ DRect::DRect(float x, float y, float width, float height)
     setRect(x, y, width, height);
 }
 
+DRect::DRect(DPoint origin, float width, float height)
+{
+    setRect(origin.x, origin.y, width, height);
+}
+
+DRect::DRect(float x, float y,DSize size)
+{
+    setRect(x, y, size.width, size.height);
+}
+
 DRect::DRect(const DRect& other)
 :m_eType(other.m_eType)
 {

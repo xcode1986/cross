@@ -23,6 +23,8 @@ public:
     void show();
     void show(const std::function<void(int)>& callback);
     
+    static void showAlertMsg(const char *pszAlertMsg);
+    static void showAlertMsg(std::string sMsg);
 private:
     
     CAAlertView(const std::string& title, const std::string& message);

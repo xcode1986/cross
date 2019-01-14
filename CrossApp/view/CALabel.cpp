@@ -31,6 +31,7 @@ CALabel::CALabel()
 ,m_eVerticalTextAlignment(CAVerticalTextAlignment::Top)
 {
     m_obContentSize = DSizeZero;
+    setTouchEnabled(false);
 }
 
 CALabel::~CALabel()
@@ -162,8 +163,8 @@ void CALabel::updateImage()
         }
     }
 
-    CAImage* image = CAFontProcesstor::imageForText(m_sText, m_obFont, size, m_eTextAlignment);
-    
+    CAImage* image =nullptr;
+    image=CAFontProcesstor::imageForText(m_sText, m_obFont, size, m_eTextAlignment);
     this->setImage(image);
 
     if (image)
@@ -399,6 +400,63 @@ void CALabel::visitEve()
         m_bUpdateImage = false;
         this->updateImage();
     }
+}
+
+void CALabel::setAlignment(const CAAlignment &var)
+{
+    CATextAlignment textAglign;
+    CAVerticalTextAlignment verAglign;
+    switch (var) {
+        case CAAlignment::LeftTop://左上
+        {
+            verAglign = CAVerticalTextAlignment::Top;
+            textAglign = CATextAlignment::Left;
+        } break;
+        case CAAlignment::LeftBottom://左下
+        {
+            verAglign = CAVerticalTextAlignment::Bottom;
+            textAglign = CATextAlignment::Left;
+        } break;
+        case CAAlignment::LeftCenter://左中
+        {
+            verAglign = CAVerticalTextAlignment::Center;
+            textAglign = CATextAlignment::Left;
+        }
+            break;
+        case CAAlignment::CenterTop://中上
+        {
+            textAglign = CATextAlignment::Center;
+            verAglign = CAVerticalTextAlignment::Top;
+        } break;
+        case CAAlignment::CenterBottom://中下
+        {
+            textAglign = CATextAlignment::Center;
+            verAglign = CAVerticalTextAlignment::Bottom;
+        } break;
+        case CAAlignment::Center://中间
+        {
+            verAglign = CAVerticalTextAlignment::Center;
+            textAglign = CATextAlignment::Center;
+        }
+            break;
+        case CAAlignment::RightTop://右上
+        {
+            textAglign = CATextAlignment::Right;
+            verAglign = CAVerticalTextAlignment::Top;
+        }break;
+        case CAAlignment::RightCenter://右中
+        {
+            textAglign = CATextAlignment::Right;
+            verAglign = CAVerticalTextAlignment::Center;
+        }break;
+        case CAAlignment::RightBottom://右下
+        {
+            verAglign = CAVerticalTextAlignment::Bottom;
+            textAglign = CATextAlignment::Right;
+        }
+    }
+    setTextAlignment(textAglign);
+    setVerticalTextAlignmet(verAglign);
 }
 
 NS_CC_END
