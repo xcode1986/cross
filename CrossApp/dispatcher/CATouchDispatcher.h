@@ -153,6 +153,7 @@ public:
     
     CAEvent* eventWithTouchID(int touchID);
     
+    bool m_bAdPause;
 public:
 
     /**

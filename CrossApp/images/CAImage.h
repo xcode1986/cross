@@ -348,6 +348,12 @@ protected:
 	friend class CAFTRichFont;
     
     friend class CAFreeTypeFont;
+public:
+    std::vector<CAView*>m_attachViews;
+    CAView*getAttachView(int index);
+    void addAttachView(CAView*pview);
+    void removeAttachView(CAView*pviwe);
+    int getAttachViewLength();
 };
 
 NS_CC_END

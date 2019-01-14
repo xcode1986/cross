@@ -150,12 +150,18 @@ void textViewSetTextJNI(int key, const std::string& var)
     {
         jobject obj = jni.env->CallStaticObjectMethod(jni.classID, jni.methodID, key);
         
-        if (JniHelper::getMethodInfo(jni, CLASS_TEXTVIEW, "setTextViewText", "(Ljava/lang/String;)V"))
+        if (JniHelper::getMethodInfo(jni, CLASS_TEXTVIEW, "setTextViewText", "([B)V"))
         {
-            jstring jFilePath = jni.env->NewStringUTF(var.c_str());
-            jni.env->CallVoidMethod(obj, jni.methodID, jFilePath);
-            jni.env->DeleteLocalRef(jFilePath);
+            //jstring jFilePath = jni.env->NewStringUTF(var.c_str());
+            
+            int count = var.length();
+            jbyteArray bytes = jni.env->NewByteArray(count);
+            jni.env->SetByteArrayRegion(bytes, 0, count, reinterpret_cast<const jbyte*>(var.c_str()));
+            
+            jni.env->CallVoidMethod(obj, jni.methodID, bytes);
             jni.env->DeleteLocalRef(jni.classID);
+            
+            jni.env->DeleteLocalRef(bytes);
         }
     }
 }
@@ -209,6 +215,8 @@ extern "C"
 {
     JNIEXPORT void JNICALL Java_org_CrossApp_lib_CrossAppTextView_showImageView(JNIEnv *env, jclass cls, jint key)
     {
+        if(s_map.find((int)key)==s_map.end())
+            return;
         if (CAImageView* imageView = (CAImageView*)(s_map[(int)key]->getSubviewByTag(0xbcda)))
         {
             imageView->setVisible(true);
@@ -217,6 +225,8 @@ extern "C"
     
     JNIEXPORT void JNICALL Java_org_CrossApp_lib_CrossAppTextView_hideImageView(JNIEnv *env, jclass cls, jint key)
     {
+        if(s_map.find((int)key)==s_map.end())
+            return;
         if (CAImageView* imageView = (CAImageView*)(s_map[(int)key]->getSubviewByTag(0xbcda)))
         {
             imageView->setVisible(false);
@@ -225,6 +235,8 @@ extern "C"
     
 	JNIEXPORT void JNICALL Java_org_CrossApp_lib_CrossAppTextView_onByte(JNIEnv *env, jclass cls, jint key, jbyteArray buf, jint width, jint height)
     {
+        if(s_map.find((int)key)==s_map.end())
+            return;
         ssize_t length = width * height * 4;
         unsigned char* data = (unsigned char*)malloc(sizeof(unsigned char) * length);
         env->GetByteArrayRegion(buf, 0, width * height * 4, (jbyte *)data);
@@ -241,9 +253,13 @@ extern "C"
     //textView delegate
 	JNIEXPORT void JNICALL Java_org_CrossApp_lib_CrossAppTextView_keyBoardHeightReturn(JNIEnv *env, jclass cls, jint key, jint height)
     {
+        if(s_map.find((int)key)==s_map.end())
+            return;
 		CATextView* textView = s_map[(int)key];
         if (s_KeyBoardHeight_map.count(textView) > 0 && s_KeyBoardHeight_map[textView])
         {
+            if(s_KeyBoardHeight_map.find(textView)==s_KeyBoardHeight_map.end())
+                return;
             s_KeyBoardHeight_map[textView]((int)s_px_to_dip(height));
         }
         else if (textView->getDelegate())
@@ -254,9 +270,11 @@ extern "C"
     //return call back
     JNIEXPORT void JNICALL Java_org_CrossApp_lib_CrossAppTextView_keyBoardReturnCallBack(JNIEnv *env, jclass cls, jint key, jint height)
     {
+        if(s_map.find((int)key)==s_map.end())
+            return;
         CATextView* textView = s_map[(int)key];
         
-        textView->resignFirstResponder();
+        //textView->resignFirstResponder();
         if (s_ShouldReturn_map.count(textView) > 0 && s_ShouldReturn_map[textView])
         {
             s_ShouldReturn_map[textView]();
@@ -269,6 +287,8 @@ extern "C"
     
 	JNIEXPORT bool JNICALL Java_org_CrossApp_lib_CrossAppTextView_textChange(JNIEnv *env, jclass cls, jint key, jstring before, jstring change, int arg0, int arg1)
     {
+        if(s_map.find((int)key)==s_map.end())
+            return true;
         const char* charBefore = env->GetStringUTFChars(before, NULL);
         std::string strBefore = charBefore;
         env->ReleaseStringUTFChars(before, charBefore);
@@ -290,6 +310,8 @@ extern "C"
     
 	JNIEXPORT void JNICALL Java_org_CrossApp_lib_CrossAppTextView_text(JNIEnv *env, jclass cls, jint key, jbyteArray textBuffer, int length)
     {
+        if(s_map.find((int)key)==s_map.end())
+            return;
         std::string text;
         text.resize(length);
         env->GetByteArrayRegion(textBuffer, 0, length, (jbyte *)&text[0]);
@@ -302,6 +324,8 @@ extern "C"
     
 	JNIEXPORT void JNICALL Java_org_CrossApp_lib_CrossAppTextView_resignFirstResponder(JNIEnv *env, jclass cls, jint key)
     {
+        if(s_map.find((int)key)==s_map.end())
+            return;
 		CATextView* textView = s_map[(int)key];
         if (textView->isFirstResponder())
         {
@@ -376,6 +400,13 @@ bool CATextView::resignFirstResponder()
     
     this->hideNativeTextView();
 
+    if (m_pPlaceHolderTips)
+	{
+		if (getText().length() <= 0)
+			m_pPlaceHolderTips->setVisible(true);
+		else
+			m_pPlaceHolderTips->setVisible(false);
+	}
     return result;
 }
 
@@ -400,6 +431,11 @@ bool CATextView::becomeFirstResponder()
     {
         CAViewAnimation::removeAnimations(m_s__StrID + "showImage");
     }
+
+    if (m_pPlaceHolderTips)
+	{
+		m_pPlaceHolderTips->setVisible(false);
+	}
     
     return result;
 }
@@ -501,7 +537,8 @@ void CATextView::update(float dt)
         
         point.x = s_dip_to_px(point.x);
         point.y = s_dip_to_px(point.y);
-        textViewSetTextViewPointJNI(m_u__ID, point.x, point.y);
+        if(m_bAutoAdjustPos)
+            textViewSetTextViewPointJNI(m_u__ID, point.x, point.y);
     }
     while (0);
 }
@@ -566,11 +603,28 @@ const int& CATextView::getFontSize()
 void CATextView::setText(const std::string& var)
 {
 	m_sText = var;
+    //部分安卓设备做了系统优化，当编辑框在屏幕外时不绘制，导致settext后无法取到image，所以必须在settext前
+    //把编辑框移动到屏幕内
+    if(!isFirstResponder())
+    {
+        DPoint point = this->convertToWorldSpace(DPointZero);
+        point.x = s_dip_to_px(point.x);
+        point.y = s_dip_to_px(point.y);
+        textViewSetTextViewPointJNI(m_u__ID, point.x, point.y);
+    }
     if (s_lock == false)
     {
         textViewSetTextJNI(m_u__ID, var);
         this->delayShowImage();
     }
+    if(!m_sText.empty())
+    {
+        if(m_pPlaceHolderTips)
+            m_pPlaceHolderTips->setVisible(false);
+    }
+    //settext结束后,把原生编辑框再移除
+    if(!isFirstResponder())
+        textViewSetTextViewPointJNI(m_u__ID, -1000, -1000);
 }
 
 const std::string& CATextView::getText()
@@ -661,6 +715,34 @@ void CATextView::onDidChangeText(const std::function<void ()> &var)
     m_obDidChangeText = var;
     s_DidChangeText_map[this] = var;
 }
+void CATextView::setPlaceHolderText(const std::string &var, CATextAlignment alg)
+{
+	if (var.empty())
+		return;
+	if (m_pPlaceHolderTips == NULL)
+	{
+		m_pPlaceHolderTips = CALabel::createWithLayout(DLayoutFill);
+		m_pPlaceHolderTips->setFontSize(m_iFontSize);
+		m_pPlaceHolderTips->setTextAlignment(alg);
+		m_pPlaceHolderTips->setColor(CAColor_gray);
+		m_pPlaceHolderTips->setVisible(false);
+		this->addSubview(m_pPlaceHolderTips);
+	}
+	if (m_sText.empty())
+	{
+		m_pPlaceHolderTips->setVisible(true);
+		m_pPlaceHolderTips->setText(var);
+	}
+}
+void CATextView::resetPos(int flag)
+{
+    DPoint point = this->convertToWorldSpace(DPointZero);
+    point.x = s_dip_to_px(point.x);
+    point.y = s_dip_to_px(point.y);
+    if(flag==-1)
+        textViewSetTextViewPointJNI(m_u__ID, -1000, -1000);
+    else
+        textViewSetTextViewPointJNI(m_u__ID, point.x, point.y);
+}
 
 NS_CC_END
-

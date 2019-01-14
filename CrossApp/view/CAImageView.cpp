@@ -102,7 +102,7 @@ CAImageView::CAImageView(void)
 ,m_fAnimationDuration(1/30.0f)
 ,m_fAnimationRunTime(0)
 {
-    
+    m_orgImg=nullptr;//nineck
 }
 
 CAImageView::~CAImageView(void)
@@ -265,18 +265,36 @@ void CAImageView::startAnimating()
 {
     CC_RETURN_IF(m_vAnimationImages.empty());
     CC_RETURN_IF(m_bAnimating);
+    m_orgImg=this->getImage();
     m_bAnimating = true;
     CAScheduler::getScheduler()->schedule(schedule_selector(CAImageView::update), this, m_fAnimationDuration);
 }
-
+void CAImageView::startAnimatingAsync()
+{
+    CC_RETURN_IF(m_vAnimationImagePaths.empty());
+    CC_RETURN_IF(m_bAnimating);
+    m_orgImg=this->getImage();
+    m_bAnimating = true;
+    CAScheduler::getScheduler()->schedule(schedule_selector(CAImageView::updateAsync), this, m_fAnimationDuration);
+}
 void CAImageView::stopAnimating()
 {
     CC_RETURN_IF(!m_bAnimating);
+    if(m_orgImg)
+        this->setImage(m_orgImg);
     m_bAnimating = false;
     m_fAnimationRunTime = 0;
     CAScheduler::getScheduler()->unschedule(schedule_selector(CAImageView::update), this);
 }
-
+void CAImageView::stopAnimatingAsync()
+{
+    CC_RETURN_IF(!m_bAnimating);
+    if(m_orgImg)
+        this->setImage(m_orgImg);
+    m_bAnimating = false;
+    m_fAnimationRunTime = 0;
+    CAScheduler::getScheduler()->unschedule(schedule_selector(CAImageView::updateAsync), this);
+}
 bool CAImageView::isAnimating()
 {
     return m_bAnimating;
@@ -284,6 +302,22 @@ bool CAImageView::isAnimating()
 
 void CAImageView::update(float dt)
 {
+    //modify by zmr add
+    if(isVisible()==false)
+        return;
+    CAView*parent=getSuperview();
+    bool bvisible=true;
+    while (parent) {
+        if(parent->isVisible()==false)
+        {
+            bvisible=false;
+            break;
+        }
+        parent=parent->getSuperview();
+    }
+    if(bvisible==false)
+        return;
+    
     do
     {
         CC_BREAK_IF(m_vAnimationImages.empty());
@@ -311,7 +345,68 @@ void CAImageView::update(float dt)
     }
     while (0);
 }
-
+void CAImageView::updateAsync(float dt)
+{
+    //modify by zmr add
+    if(isVisible()==false)
+        return;
+    CAView*parent=getSuperview();
+    bool bvisible=true;
+    while (parent) {
+        if(parent->isVisible()==false)
+        {
+            bvisible=false;
+            break;
+        }
+        parent=parent->getSuperview();
+    }
+    if(bvisible==false)
+        return;
+    
+    do
+    {
+        CC_BREAK_IF(m_vAnimationImagePaths.empty());
+        m_fAnimationRunTime += dt * 10000;
+        int count = (int)m_vAnimationImagePaths.size();
+        int index = m_fAnimationRunTime / (m_fAnimationDuration * 10000);
+        int nRotation = 36 * (index % 10);
+        bool isFinished = (m_iAnimationRepeatCount > 0 && index >= count * m_iAnimationRepeatCount);
+        if (isFinished)
+        {
+            index = count - 1;
+        }
+        else
+        {
+            index -= 1;
+        }
+        index = index % count;
+        index = MAX(index, 0);
+        CAImage*imgshow=CAImage::create(m_vAnimationImagePaths.at(index));
+        this->setImage(imgshow);
+        if (m_bAnimatResetSize == 1)
+        {
+            setCenter(DRect(getCenterOrigin(), imgshow->getContentSize()));
+        }
+        else if (m_bAnimatResetSize == 2)
+        {
+            setCenter(DRect(getCenterOrigin().x - m_obContentSize.width / 2 + imgshow->getContentSize().width / 2, getCenterOrigin().y, imgshow->getContentSize()));
+        }
+        else if (m_bAnimatResetSize == 3)
+        {
+            setRotation(nRotation);
+        }
+        //释放当前帧
+        CAImageCache::getInstance()->removeImage(imgshow);
+        if (isFinished)
+        {
+            //CCLog("gohopo1:%d", index);
+            this->stopAnimatingAsync();
+            break;
+        }
+        //CCLog("gohopo2:%d,%d", index, m_fAnimationRunTime);
+    }
+    while (0);
+}
 CAView* CAImageView::copy()
 {
     CAImageView* pReturn = CAImageView::create();

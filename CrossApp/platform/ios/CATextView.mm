@@ -48,15 +48,21 @@ static std::map<CrossApp::CATextView*, std::function<void()> > s_DidChangeText_m
     _iosTextView = [[[UITextView alloc]initWithFrame:[self bounds]] autorelease];
     _iosTextView.backgroundColor = nil;
     _iosTextView.delegate = self;
+    iosTextView.scrollEnabled=true;//modify by zmr add
+    _iosTextView.layoutManager.allowsNonContiguousLayout = NO;//modify by zmr add
     [self addSubview:_iosTextView];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillWasShown:) name:UIKeyboardWillShowNotification object:nil];
     
     [[NSNotificationCenter defaultCenter]  addObserver:self selector:@selector(keyboardWasHidden:) name:UIKeyboardWillHideNotification object:nil];
+
+    //modify by zmr add
+    [_iosTextView addObserver:self forKeyPath:@"contentSize" options:NSKeyValueObservingOptionNew context:nil];
 }
 
 -(void)removeTextView
 {
+    [_iosTextView removeObserver:self forKeyPath:@"contentSize"];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self removeFromSuperview];
 }
@@ -101,6 +107,34 @@ static std::map<CrossApp::CATextView*, std::function<void()> > s_DidChangeText_m
     }
     
     return YES;
+}
+
+- (void)textViewDidChange:(UITextView *)textView
+{
+    if (_textView->getDelegate())
+    {
+        return _textView->getDelegate()->textViewDidChangeText(_textView);
+    }
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+    
+    if ([keyPath isEqualToString:@"contentSize"]) {
+        CGRect frame = self.frame;
+        CGSize newSize = [change[NSKeyValueChangeNewKey] CGSizeValue];
+        /*NSLog(@"frame:%lf newsize:%lf oldsize:%lf",frame.size.height,newSize.height,[change[NSKeyValueChangeOldKey] CGSizeValue].height);
+        if(frame.size.height<newSize.height)
+            NSLog(@"contentSize ++");
+        else
+            NSLog(@"contentSize --");*/
+
+        CGFloat scale  = [[UIScreen mainScreen] scale];
+        int height = CrossApp::s_px_to_dip(newSize.height * scale);
+        if (_textView->getDelegate())
+        {
+            _textView->getDelegate()->textViewDidChangeContentSize(_textView,height);
+        }
+    }
 }
 
 - (void) keyboardWillWasShown:(NSNotification *) notif
@@ -155,7 +189,7 @@ CATextView::CATextView()
 , m_pShowImageView(nullptr)
 , m_pTextView(nullptr)
 , m_pDelegate(nullptr)
-, m_iFontSize(40)
+, m_iFontSize(24)
 , m_eAlign(CATextView::Align::Left)
 , m_eReturnType(CATextView::ReturnType::Default)
 , m_obLastPoint(DPoint(-0xffff, -0xffff))
@@ -247,11 +281,11 @@ void CATextView::onEnterTransitionDidFinish()
 }
 void CATextView::onExitTransitionDidStart()
 {
-    CAView::onExitTransitionDidStart();
     if (this->isFirstResponder())
     {
         this->resignFirstResponder();
     }
+    CAView::onExitTransitionDidStart();
 }
 bool CATextView::resignFirstResponder()
 {
@@ -277,8 +311,14 @@ bool CATextView::resignFirstResponder()
     
     this->hideNativeTextView();
     
+    if (m_pPlaceHolderTips)
+    {
+        if (getText().length() <= 0)
+            m_pPlaceHolderTips->setVisible(true);
+        else
+            m_pPlaceHolderTips->setVisible(false);
+    }
     return result;
-
 }
 bool CATextView::becomeFirstResponder()
 {
@@ -299,6 +339,10 @@ bool CATextView::becomeFirstResponder()
     
     this->showNativeTextView();
     
+    if (m_pPlaceHolderTips)
+    {
+        m_pPlaceHolderTips->setVisible(false);
+    }
     return result;
 }
 const DRect CATextView::convertRect(const CrossApp::DRect &rect)
@@ -423,6 +467,11 @@ void CATextView::setText(const std::string &var)
     textView_iOS1.text = [NSString stringWithUTF8String:m_sText.c_str()];
     
     delayShowImage();
+    if(!m_sText.empty())
+    {
+        if(m_pPlaceHolderTips)
+            m_pPlaceHolderTips->setVisible(false);
+    }
 }
 const std::string& CATextView::getText()
 {
@@ -460,6 +509,22 @@ const int& CATextView::getFontSize()
 void CATextView::setReturnType(CATextView::ReturnType var)
 {
     m_eReturnType = var;
+    if (m_eReturnType == ReturnType::Done)
+    {
+        textView_iOS1.returnKeyType = UIReturnKeyDone;
+    }
+    else if (m_eReturnType == ReturnType::Send)
+    {
+        textView_iOS1.returnKeyType = UIReturnKeySend;
+    }
+    else if (m_eReturnType == ReturnType::Next)
+    {
+        textView_iOS1.returnKeyType = UIReturnKeyNext;
+    }
+    else if (m_eReturnType == ReturnType::Default)
+    {
+        textView_iOS1.returnKeyType = UIReturnKeyDefault;
+    }
 }
 
 CATextView::ReturnType CATextView::getReturnType()
@@ -514,6 +579,26 @@ void CATextView::onKeyBoardHeight(const std::function<void (int)> &var)
 {
     m_obKeyBoardHeight = var;
     s_KeyBoardHeight_map[this] = var;
+}
+
+void CATextView::setPlaceHolderText(const std::string &var, CATextAlignment alg)
+{
+    if (var.empty())
+        return;
+    if (m_pPlaceHolderTips == NULL)
+    {
+        m_pPlaceHolderTips = CALabel::createWithLayout(DLayoutFill);
+        m_pPlaceHolderTips->setFontSize(m_iFontSize);
+        m_pPlaceHolderTips->setTextAlignment(alg);
+        m_pPlaceHolderTips->setColor(CAColor_gray);
+        m_pPlaceHolderTips->setVisible(false);
+        this->addSubview(m_pPlaceHolderTips);
+    }
+    if (m_sText.empty())
+    {
+        m_pPlaceHolderTips->setVisible(true);
+        m_pPlaceHolderTips->setText(var);
+    }
 }
 
 void CATextView::onShouldChangeCharacters(const std::function<bool (ssize_t, ssize_t, const std::string &)> &var)

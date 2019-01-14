@@ -73,18 +73,22 @@ public:
     virtual void ccTouchCancelled(CATouch *pTouch, CAEvent *pEvent);
     
     virtual void viewDidLoad() {};
+
+    virtual void viewDidLoadFinish() {};
     
     virtual void viewDidUnload() {};
     
-    virtual void viewDidAppear(){};
+    virtual void viewDidAppear();
     
-    virtual void viewDidDisappear(){};
+    virtual void viewDidDisappear();
     
     virtual void viewSizeDidChanged() {};
     
     virtual void addViewFromSuperview(CAView* node);
     
     virtual void removeViewFromSuperview();
+
+    virtual void viewWillUnload(){};
     
 public:
     
@@ -122,6 +126,7 @@ class CC_DLL CANavigationController
 {
     
 public:
+    CREATE_FUNC(CANavigationController);
     
     CANavigationController();
     
@@ -136,6 +141,8 @@ public:
     virtual void pushViewController(CAViewController* viewController, bool animated);
     
     CAViewController* popViewControllerAnimated(bool animated);
+
+    void popViewControllerIngoreNavigatebar();
     
     void popToRootViewControllerAnimated(bool animated);
     
@@ -158,6 +165,8 @@ public:
     CC_PROPERTY_IS(bool, m_bTouchMoved, TouchMoved);
 
     CC_PROPERTY(CAImage*, m_pNavigationBarBackgroundImage, NavigationBarBackgroundImage);
+
+    CC_PROPERTY_PASS_BY_REF(CAColor4B, m_sNavigationBarBackgroundColor, NavigationBarBackgroundColor);
     
     CC_PROPERTY_PASS_BY_REF(CAColor4B, m_sNavigationBarTitleColor, NavigationBarTitleColor);
 
@@ -211,6 +220,11 @@ protected:
     
     int getNavigationBarNowY(CAViewController* viewController);
     
+public:
+    //add
+    CANavigationBar* getNavigationBar(CAViewController* viewController);
+    int getNavigationBarHeight(){return m_iNavigationBarHeight;}
+    bool getClearance(){return m_iClearance;}
 protected:
 
     float m_fProgress;

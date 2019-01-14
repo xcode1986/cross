@@ -30,7 +30,11 @@ CANavigationBar::CANavigationBar(int clearance)
 ,m_pGoBackBarButtonItem(nullptr)
 ,m_iClearance(clearance)
 {
-
+    CAColor4B cr;
+    cr.setUInt32(0xff333333);
+    m_cButtonColor=cr;
+    const CAThemeManager::stringMap& map = GETINSTANCE_THEMEMAP("CANavigationBar");
+    m_cTitleColor = ccc4Int(CrossApp::hex2Int(map.at("titleColor")));
 }
 
 CANavigationBar::~CANavigationBar()
@@ -83,7 +87,7 @@ bool CANavigationBar::init()
     this->addSubview(m_pContentView);
     m_pContentView->release();
     
-    this->enabledBottomShadow(true);
+    this->enabledBottomShadow(false);//modify by zmr 
     
     const CAThemeManager::stringMap& map = GETINSTANCE_THEMEMAP("CANavigationBar");
     
@@ -119,7 +123,7 @@ void CANavigationBar::setItem(CANavigationBarItem* item)
 {
     if (item == NULL)
     {
-        item = CANavigationBarItem::create("The Title");
+        item = CANavigationBarItem::create(" ");
     }
     CC_SAFE_RETAIN(item);
     CC_SAFE_RELEASE_NULL(m_pItem);
@@ -229,7 +233,7 @@ void CANavigationBar::showTitle()
         title->setNumberOfLine(1);
 		title->setColor(m_cTitleColor);
         title->setFontSize(36);
-        title->setBold(true);
+        //title->setBold(true);
         m_pContentView->addSubview(title);
         m_pTitle = title;
         
@@ -279,6 +283,12 @@ void CANavigationBar::showLeftButton()
             if (image)
             {
                 float ratio = image->getAspectRatio();
+                DSize iSize = image->getContentSize();
+                //add by zmr 对于网络图片，初始时没有数据，ratio为0，会导致setImageSize出现问题
+                if(iSize.equals(DSizeZero))
+                {
+                    ratio=1;
+                }
                 button->setImageSize(DSize(m_pGoBackBarButtonItem->getImageWidth(), m_pGoBackBarButtonItem->getImageWidth() / ratio));
                 button->setImageOffset(DSize(m_pGoBackBarButtonItem->getImageOffsetX(), 0));
                 button->setImageForState(CAControl::State::Normal, image);
@@ -317,6 +327,12 @@ void CANavigationBar::showLeftButton()
                 if (image)
                 {
                     float ratio = image->getAspectRatio();
+                    DSize iSize = image->getContentSize();
+                    //add by zmr 对于网络图片，初始时没有数据，ratio为0，会导致setImageSize出现问题
+                    if(iSize.equals(DSizeZero))
+                    {
+                        ratio=1;
+                    }
                     button->setImageSize(DSize(item->getImageWidth(), item->getImageWidth() / ratio));
                     button->setImageOffset(DSize(item->getImageOffsetX(), 0));
                     button->setImageForState(CAControl::State::Normal, image);
@@ -392,6 +408,12 @@ void CANavigationBar::showRightButton()
                 if (image)
                 {
                     float ratio = image->getAspectRatio();
+                    DSize iSize = image->getContentSize();
+                    //add by zmr 对于网络图片，初始时没有数据，ratio为0，会导致setImageSize出现问题
+                    if(iSize.equals(DSizeZero))
+                    {
+                        ratio=1;
+                    }
                     button->setImageSize(DSize(item->getImageWidth(), item->getImageWidth() / ratio));
                     button->setImageOffset(DSize(item->getImageOffsetX(), 0));
                     button->setImageForState(CAControl::State::Normal, image);
@@ -434,6 +456,14 @@ void CANavigationBar::goBack()
         m_obPopViewController();
     }
 }
+CAButton* CANavigationBar::getLeftButton(int index)
+{
+	return m_pLeftButtons.at(index);
+}
+CAButton* CANavigationBar::getRightButton(int index)
+{
+	return m_pRightButtons.at(index);
+}
 
 #pragma CABadgeView
 
@@ -460,19 +490,22 @@ bool CABadgeView::init()
     m_pTextView = CALabel::createWithLayout(DLayout(DHorizontalLayout_W_C(180, 0.5f), DVerticalLayout_H_C(46, 0.5f)));
     m_pTextView->setTextAlignment(CATextAlignment::Center);
     m_pTextView->setVerticalTextAlignmet(CAVerticalTextAlignment::Center);
-    m_pTextView->setFontSize(30);
+    m_pTextView->setFontSize(26);
     m_pTextView->setColor(CAColor4B::WHITE);
-    m_pTextView->setBold(true);
+    //m_pTextView->setBold(true);
     this->addSubview(m_pTextView);
     
-    this->setScale(1 /1.23f);
+    this->setScale(0.6);
     
     return true;
 }
 
 void CABadgeView::setBadgeText(const std::string& text)
 {
-    this->setVisible(!text.empty());
+    if(text=="0"||text.empty())
+        this->setVisible(false);
+    else
+        this->setVisible(true);
     
     m_pTextView->setLayout(DLayout(DHorizontalLayout_W_C(180, 0.5f), DVerticalLayout_H_C(46, 0.5f)));
     m_pTextView->setText(text);
@@ -873,7 +906,23 @@ void CATabBar::showSelectedBackground()
         badgeView->setBadgeText(m_pItems.at(i)->getBadgeValue());
     }
 }
-
+void CATabBar::refreshBadgeText()
+{
+    for (size_t i=0; i<m_pButtons.size(); i++)
+    {
+        CABadgeView* badgeView = m_pBadgeViews.at(i);
+        if(m_pItems.at(i)->getBadgeValue()==""||m_pItems.at(i)->getBadgeValue()=="0")
+        {
+            badgeView->setVisible(false);
+        }
+        else
+        {
+            badgeView->setVisible(true);
+            badgeView->setBadgeText(m_pItems.at(i)->getBadgeValue());
+        }
+        
+    }
+}
 void CATabBar::showSelectedIndicatorView()
 {
     m_pContentView->removeSubview(m_pSelectedIndicatorView);

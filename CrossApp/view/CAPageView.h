@@ -39,7 +39,12 @@ public:
         Horizontal = 0,
         Vertical
     };
-    
+    enum class State
+    {
+        Last,
+        Next,
+        None
+    };
 public:
     // event listeners. If these functions are set, the corresponding function of CAPageViewDelegate will fail.
     CC_LISTENING_FUNCTION(void(), BeginTurning);
@@ -82,6 +87,7 @@ public:
     
     virtual void setShowsScrollIndicators(bool var) override;
     
+    State getState(){return m_ePageViewState;};
 protected:
 
     virtual bool ccTouchBegan(CATouch *pTouch, CAEvent *pEvent) override;
@@ -141,13 +147,6 @@ private:
     using CAScrollView::getSubviewByTag;
     
 private:
-    
-    enum class State
-    {
-        Last,
-        Next,
-        None
-    };
     
     CAPageView::State m_ePageViewState;
     

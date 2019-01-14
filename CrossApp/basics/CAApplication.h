@@ -146,7 +146,7 @@ public:
     virtual void stopAnimation(void) = 0;
 
     virtual void startAnimation(void) = 0;
-
+    virtual bool isAnimationStop(void)=0;
     void updateDraw();
     
     void drawScene(float dt = 0);
@@ -232,7 +232,8 @@ public:
 public:
 
     static CAApplication* getApplication(void);
-	
+	bool m_bNowPrint=false;
+    string m_sResExtAdd="";
 protected:
     
     void reset();
@@ -341,7 +342,7 @@ public:
     virtual void setAnimationInterval(double dValue);
     virtual void startAnimation(void);
     virtual void stopAnimation();
-
+    virtual bool isAnimationStop(void);
 protected:
     bool m_bInvalid;
 };

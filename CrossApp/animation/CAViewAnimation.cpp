@@ -128,6 +128,7 @@ CAViewModel::CAViewModel(CAView* v)
 ,bReady(false)
 {
     CC_SAFE_RETAIN(view);
+    //ps by zmr 每调用一次动作，就会多一个引用计数,如果是永久性动画，这种机制会导致对象无法被销毁。动画的结束需要自行控制.
 }
 
 CAViewModel::~CAViewModel()
@@ -377,6 +378,17 @@ void CAViewAnimation::removeAnimationsWithView(CAView* view)
     for (auto& module : animation->m_vModules)
     {
         module->animations.erase(view);
+    }
+    for (CAVector<CAViewAnimation::Module*>::iterator itr=animation->m_vModules.begin();
+         itr!=animation->m_vModules.end();)
+    {
+        CAViewAnimation::Module* module = *itr;
+        if(module->animations.size()==0)
+        {
+            itr = animation->m_vModules.erase(itr);
+        }
+        else
+            itr++;
     }
 }
 

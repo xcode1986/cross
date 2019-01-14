@@ -30,10 +30,11 @@ public:
     
     bool init();
     
-    void open(const std::function<void(CAImage*)>& callback);
+    void open(const std::function<void(CAImage*,CAData*)>& callback);
 
     void writeImageToPhoto(CAImage* image, const std::function<void(bool)>& finishCallback, const std::string &imageName = "");
     
+    bool m_bAllowEdit=false;
 private:
 
     CAImage* m_pSavedImage;

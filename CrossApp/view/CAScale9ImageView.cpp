@@ -143,6 +143,8 @@ void CAScale9ImageView::updateWithImage()
     m_pScale9ImageView = new CAView();
     m_pScale9ImageView->setLayout(DLayoutFill);
     this->addSubview(m_pScale9ImageView);
+    //add by zmr 在重新setiamge之后，会导致m_pScale9ImageView把原来add的subview覆盖掉，所以需要设置为m_pScale9ImageView底部
+    m_pScale9ImageView->setZOrder(-1);
     m_pScale9ImageView->release();
     
     m_obOriginalSize = m_pobImage->getContentSize();
@@ -150,6 +152,8 @@ void CAScale9ImageView::updateWithImage()
     for (int i=0; i<9; i++)
     {
         m_pImageView[i] = CAImageView::createWithImage(m_pobImage);
+        //CAScale9ImageView的9宫格子view不需要绑定 add by zmr
+        m_pobImage->removeAttachView(m_pImageView[i]);
     }
     
     // Centre
@@ -420,5 +424,11 @@ void CAScale9ImageView::setImage(CrossApp::CAImage *image)
     this->updateWithImage();
 }
 
+void CAScale9ImageView::removeAllSubviews()
+{
+	CAView::removeAllSubviews();
+	m_pScale9ImageView = nullptr;
+	this->updateWithImage();
+}
 
 NS_CC_END

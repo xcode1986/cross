@@ -10,6 +10,7 @@
 #define __CAIMAGEVIEW__
 
 #include "CAView.h"
+#include <vector>
 
 NS_CC_BEGIN
 
@@ -57,19 +58,20 @@ public:
     CC_PROPERTY(CAImageView::ScaleType, m_eScaleType, ScaleType);
     
     CC_SYNTHESIZE(CAVector<CAImage*>, m_vAnimationImages, AnimationImages);
-    
+    CC_SYNTHESIZE(std::vector<string>, m_vAnimationImagePaths, AnimationImagePaths);
     CC_SYNTHESIZE(float, m_fAnimationDuration, AnimationDuration);//default is number of images * 1/30th
     
     CC_SYNTHESIZE(unsigned int, m_iAnimationRepeatCount, AnimationRepeatCount);//(default is 0)
-    
+    void startAnimatingAsync();
     void startAnimating();
-    void stopAnimating();
+    virtual void stopAnimating();
+    virtual void stopAnimatingAsync();
     bool isAnimating();
     
     virtual CAView* copy();
-    
+    CAImage*m_orgImg;
 protected:
-
+    void updateAsync(float dt);
     void update(float dt);
     
     virtual void setContentSize(const DSize& contentSize);
@@ -93,6 +95,9 @@ protected:
     int m_fAnimationRunTime;
     
     bool m_bAnimating;
+
+public:
+    int m_bAnimatResetSize;//做动画期间重置大小
 };
 
 NS_CC_END

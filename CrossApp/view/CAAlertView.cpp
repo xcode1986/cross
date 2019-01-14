@@ -73,4 +73,19 @@ void CAAlertView::show(const std::function<void(int)>& callback)
     
 }
 
+void CAAlertView::showAlertMsg(const char *pszAlertMsg)
+{
+    std::vector<std::string> vButtons;
+    vButtons.push_back("确定");
+    CAAlertView * pAlert = CAAlertView::create("提示", pszAlertMsg, vButtons);
+    pAlert->show();
+}
+void CAAlertView::showAlertMsg(std::string sMsg)
+{
+    std::vector<std::string> vButtons;
+    vButtons.push_back("确定");
+    CAAlertView * pAlert = CAAlertView::create("提示", sMsg.c_str(), vButtons);
+    pAlert->show();
+}
+
 NS_CC_END

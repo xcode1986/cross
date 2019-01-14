@@ -194,11 +194,15 @@ void setTextJNI(int key, const std::string& var)
     {
         jobject obj = jni.env->CallStaticObjectMethod(jni.classID, jni.methodID, key);
         
-        if (JniHelper::getMethodInfo(jni, CLASS_NAME, "setTextFieldText", "(Ljava/lang/String;)V"))
+        if (JniHelper::getMethodInfo(jni, CLASS_NAME, "setTextFieldText", "([B)V"))
         {
-            jstring jFilePath = jni.env->NewStringUTF(var.c_str());
-            jni.env->CallVoidMethod(obj, jni.methodID, jFilePath);
-            jni.env->DeleteLocalRef(jFilePath);
+            //jstring jFilePath = jni.env->NewStringUTF(var.c_str());
+            int count = var.length();
+            jbyteArray bytes = jni.env->NewByteArray(count);
+            jni.env->SetByteArrayRegion(bytes, 0, count, reinterpret_cast<const jbyte*>(var.c_str()));
+            
+            jni.env->CallVoidMethod(obj, jni.methodID, bytes);
+            jni.env->DeleteLocalRef(bytes);
             jni.env->DeleteLocalRef(jni.classID);
         }
     }
@@ -299,6 +303,8 @@ extern "C"
 {
     JNIEXPORT void JNICALL Java_org_CrossApp_lib_CrossAppTextField_showImageView(JNIEnv *env, jclass cls, jint key)
     {
+        if(s_map.find((int)key)==s_map.end())
+            return;
         if (CAImageView* imageView = (CAImageView*)(s_map[(int)key]->getSubviewByTextTag("imageView")))
         {
             imageView->setVisible(true);
@@ -307,6 +313,8 @@ extern "C"
     
     JNIEXPORT void JNICALL Java_org_CrossApp_lib_CrossAppTextField_hideImageView(JNIEnv *env, jclass cls, jint key)
     {
+        if(s_map.find((int)key)==s_map.end())
+            return;
         if (CAImageView* imageView = (CAImageView*)(s_map[(int)key]->getSubviewByTextTag("imageView")))
         {
             imageView->setVisible(false);
@@ -526,6 +534,9 @@ bool CATextField::becomeFirstResponder()
     {
         return false;
     }
+    //用于修复部分设备settext编辑框不更新问题
+    this->removeSubviewByTextTag("showLabelText");
+    m_pImgeView->setVisible(true);
 
 	bool result = CAControl::becomeFirstResponder();
 
@@ -643,7 +654,8 @@ void CATextField::update(float dt)
         
         point.x = s_dip_to_px(point.x);
         point.y = s_dip_to_px(point.y);
-        setTextFieldPointJNI(m_u__ID, point.x, point.y);
+        if(m_bAutoAdjustPos)
+            setTextFieldPointJNI(m_u__ID, point.x, point.y);
     }
     while (0);
 }
@@ -855,10 +867,41 @@ const CAColor4B& CATextField::getPlaceHolderColor()
 void CATextField::setText(const std::string& var)
 {
 	m_sText = var;
-    if (s_lock == false)
+    //用于修复部分设备settext编辑框不更新问题
+    if(!isFirstResponder())
     {
-        setTextJNI(m_u__ID, var);
-        this->delayShowImage();
+        this->removeSubviewByTextTag("showLabelText");
+        CALabel*label=CALabel::createWithLayout(DLayoutFill);
+        label->setText(m_sText);
+        label->setColor(getTextColor());
+        label->setFontSize(getFontSize());
+        label->setZOrder(9999);
+        this->addSubview(label);
+        label->setTextTag("showLabelText");
+        label->setVerticalTextAlignmet(CAVerticalTextAlignment::Center);
+        switch (m_eAlign)
+        {
+            case CATextField::Align::Center:
+                label->setTextAlignment(CATextAlignment::Center);
+                break;
+            case CATextField::Align::Left:
+                label->setTextAlignment(CATextAlignment::Left);
+                break;
+            case CATextField::Align::Right:
+                label->setTextAlignment(CATextAlignment::Right);
+                break;
+            default:
+                break;
+        }
+        m_pImgeView->setVisible(false);
+    }
+    else
+    {
+        if (s_lock == false)
+        {
+            setTextJNI(m_u__ID, var);
+            this->delayShowImage();
+        }
     }
 }
 
@@ -991,5 +1034,14 @@ void CATextField::onDidChangeText(const std::function<void ()> &var)
     m_obDidChangeText = var;
     s_DidChangeText_map[this] = var;
 }
+void CATextField::resetPos(int flag)
+{
+    DPoint point = this->convertToWorldSpace(DPointZero);
+    point.x = s_dip_to_px(point.x);
+    point.y = s_dip_to_px(point.y);
+    if(flag==-1)
+        setTextFieldPointJNI(m_u__ID, -1000, -1000);
+    else
+        setTextFieldPointJNI(m_u__ID, point.x, point.y);
+}
 NS_CC_END
-

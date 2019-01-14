@@ -8,6 +8,7 @@
 
 #include "../CAImagePickerController.h"
 #include "basics/CAScheduler.h"
+#include "platform/CAFileUtils.h"
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
 #include "platform/android/jni/JniHelper.h"
 #include <jni.h>
@@ -60,7 +61,7 @@ extern "C"
 
 #endif
 
-std::function<void(CrossApp::CAImage*)> _imagePickerControllerCallBack;
+std::function<void(CAImage*, CAData*)> _imagePickerControllerCallBack;
 
 static CAImagePickerController* s_pImagePickerController = nullptr;
 
@@ -90,7 +91,7 @@ bool CAImagePickerController::init()
     return true;
 }
 
-void CAImagePickerController::open(const std::function<void(CrossApp::CAImage*)>& callback)
+void CAImagePickerController::open(const std::function<void(CAImage*, CAData*)>& callback)
 {
     _imagePickerControllerCallBack = callback;
     
@@ -120,6 +121,7 @@ void CAImagePickerController::open(const std::function<void(CrossApp::CAImage*)>
         default:
             break;
     }
+    s_pImagePickerController=nullptr;
 }
 
 void CAImagePickerController::writeImageToPhoto(CAImage* image, const std::function<void(bool)>& finishCallback, const std::string &imageName)
@@ -133,19 +135,26 @@ extern "C"
     JNIEXPORT void JNICALL Java_org_CrossApp_lib_CrossAppNativeTool_ImageReturn
     ( JNIEnv* env,jclass thiz ,jstring arg1, jobject arg2)
     {
-        const char* str = env->GetStringUTFChars(arg1, false);
+        const char* str = env->GetStringUTFChars(arg1, NULL);
 
         CAScheduler::getScheduler()->performFunctionInUIThread( [=]()
        {
            if (_imagePickerControllerCallBack)
            {
                CAImage *image = new CAImage();
-               
-               if (image->initWithImageFile(str))
-               {
-                   _imagePickerControllerCallBack(CAImage::generateMipmapsWithImage(image));
-                   image->release();
-               }
+               CAData* data = new CAData();
+			   unsigned long pSize = 0;
+			   unsigned char* pData = FileUtils::getInstance()->getFileData(str, "rb", &pSize);
+			   if (pSize > 0)
+			   {
+				   data->fastSet(pData, pSize);
+			   }
+			   if (image->initWithImageData(data))
+			   {
+				   _imagePickerControllerCallBack(CAImage::generateMipmapsWithImage(image), data);
+				   image->release();
+			   }
+			   data->release();
            }
 
            CC_SAFE_RELEASE_NULL(s_pImagePickerController);

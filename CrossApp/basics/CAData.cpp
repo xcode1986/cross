@@ -66,7 +66,49 @@ std::string CAData::toString()
     }
     return ret;
 }
-
+void CAData::reSet(int posskip,int posadd,std::string addstr)
+{
+    if(posskip>0)
+    {
+        ssize_t lennew=m_iLength-posskip;
+        unsigned char* pbytesnew=m_pBytes+posskip;
+        unsigned char *pData = (unsigned char*)malloc(lennew);
+        memcpy(pData, pbytesnew, lennew);
+        clear();
+        fastSet(pData, lennew);
+    }
+    if(posadd>=0&&addstr.length()>0)
+    {
+        ssize_t lennew=m_iLength+addstr.length();
+        unsigned char *pData = (unsigned char*)malloc(lennew);
+        memcpy(pData, addstr.c_str(), addstr.length());
+        memcpy(pData+addstr.length(), m_pBytes, m_iLength);
+        clear();
+        fastSet(pData, lennew);
+    }
+}
+void CAData::changeVal(std::string charjia,std::string charjian)
+{
+    char hjia;
+    ssize_t lenjia=charjia.length();
+    if(lenjia>0)
+        hjia=charjia[0];
+    ssize_t lenjian=charjian.length();
+    char hjian;
+    if(lenjian>0)
+        hjian=charjian[0];
+    for(int i=0;i<m_iLength;i++)
+    {
+        if(lenjia>0)
+        {
+            m_pBytes[i]=m_pBytes[i]+hjia;
+        }
+        if(lenjian>0)
+        {
+            m_pBytes[i]=m_pBytes[i]-hjian;
+        }
+    }
+}
 void CAData::clear()
 {
     delete [] m_pBytes;

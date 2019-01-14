@@ -73,6 +73,13 @@ public:
 
     CC_SYNTHESIZE_READONLY(float, m_fInsetBottom, InsetBottom);
     
+    CC_SYNTHESIZE(float, m_fContentLeft, ContentLeft);
+    
+    CC_SYNTHESIZE(float, m_fContentTop, ContentTop);
+    
+    CC_SYNTHESIZE(float, m_fContentRight, ContentRight);
+    
+    CC_SYNTHESIZE(float, m_fContentBottom, ContentBottom);
 protected:
     
     void updateCapInset();
@@ -98,7 +105,9 @@ protected:
     bool m_bAutoCapInsets;
     
     bool m_bUpdatePositions;
-    
+
+ public:
+	virtual void removeAllSubviews();   
 };
 
 // end of GUI group

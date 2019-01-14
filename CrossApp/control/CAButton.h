@@ -31,7 +31,8 @@ public:
         TouchUpInSide,
         TouchUpOutSide,
         TouchLongPress,
-        TouchCancelled
+        TouchCancelled,
+        TouchValueChanged
     };
     
     enum class Type : int

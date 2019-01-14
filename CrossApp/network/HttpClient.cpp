@@ -307,6 +307,8 @@ static int processDeleteTask(CAHttpClient* client, CAHttpRequest* request, write
     bool ok = curl.init(client, request, callback, stream, headerCallback, headerStream, errorBuffer)
     && curl.setOption(CURLOPT_CUSTOMREQUEST, "DELETE")
     && curl.setOption(CURLOPT_FOLLOWLOCATION, true)
+    && curl.setOption(CURLOPT_POSTFIELDS, request->getRequestData())
+	&& curl.setOption(CURLOPT_POSTFIELDSIZE, request->getRequestDataSize())
     && curl.perform(responseCode);
     return ok ? 0 : 1;
 }

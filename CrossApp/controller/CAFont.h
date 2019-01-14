@@ -23,6 +23,19 @@ enum class CATextAlignment
     Right = 2,
 };
 
+enum class CAAlignment
+{
+    LeftTop,//左上
+    CenterTop,//中上
+    RightTop,//右上
+    RightCenter,//右中
+    RightBottom,//右下
+    CenterBottom,//中下
+    LeftBottom,//左下
+    LeftCenter,//左中
+    Center//中间
+};
+
 const CAColor4B CAFontShadowDefaultColor = CAColor4B(0, 0, 0, 88);
 
 class CC_DLL CAFontShadow

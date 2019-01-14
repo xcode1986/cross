@@ -256,7 +256,7 @@ CATextField::CATextField()
 , m_cPlaceHdolderColor(CAColor4B::GRAY)
 , m_iMarginLeft(10)
 , m_iMarginRight(10)
-, m_iFontSize(40)
+, m_iFontSize(24)
 , m_iMaxLength(0)
 , m_eClearBtn(CATextField::ClearButtonMode::None)
 , m_eAlign(CATextField::Align::Left)
@@ -302,11 +302,11 @@ void CATextField::onEnterTransitionDidFinish()
 
 void CATextField::onExitTransitionDidStart()
 {
-    CAControl::onExitTransitionDidStart();
     if (this->isFirstResponder())
     {
         this->resignFirstResponder();
     }
+    CAControl::onExitTransitionDidStart();
 }
 
 bool CATextField::resignFirstResponder()
@@ -447,7 +447,9 @@ bool CATextField::init()
 {
     const CAThemeManager::stringMap& map = CAApplication::getApplication()->getThemeManager()->getThemeMap("CATextField");
     CAImage* image = CAImage::create(map.at("backgroundView_normal"));
-    DRect capInsets = DRect(image->getPixelsWide()/2 ,image->getPixelsHigh()/2 , 1, 1);
+    DRect capInsets=DRect(0,0,1,1);
+    if(image)
+        capInsets = DRect(image->getPixelsWide()/2 ,image->getPixelsHigh()/2 , 1, 1);
     m_pBackgroundView = CAScale9ImageView::createWithImage(image);
     m_pBackgroundView->setLayout(DLayoutFill);
     m_pBackgroundView->setCapInsets(capInsets);
