@@ -85,7 +85,7 @@
     __image->initWithImageData(ca_data);
     if (self.callback)
     {
-        self.callback(image,ca_data);
+        self.callback(__image,ca_data);
     }
     CC_SAFE_RELEASE(__image);
 }
