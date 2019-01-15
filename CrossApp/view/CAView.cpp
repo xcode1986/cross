@@ -2081,6 +2081,7 @@ void CAView::updateDisplayedAlpha(float superviewAlpha)
 {
 	_displayedAlpha = _realAlpha * superviewAlpha;
     //注意setAlpha的调用有时机问题，如果只想要父类透明，那就先对自身进行setAlpha设置（在子节点加入到父节点之前调用）。否则会影响到所有子节点的渲染。setAlpha的机制是会对当前设置的节点（包括它的子节点均起作用）    if (!m_obSubviews.empty())
+    if (!m_obSubviews.empty())
     {
         CAVector<CAView*>::iterator itr;
         for (itr=m_obSubviews.begin(); itr!=m_obSubviews.end(); itr++)
