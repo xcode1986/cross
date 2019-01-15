@@ -22674,7 +22674,7 @@ void js_register_crossapp_CAViewController(JSContext *cx, JS::HandleObject globa
         JS_FN("setTitle", js_crossapp_CAViewController_setTitle, 1, JSPROP_PERMANENT | JSPROP_ENUMERATE),
         JS_FN("parser", js_crossapp_CAViewController_parser, 0, JSPROP_PERMANENT | JSPROP_ENUMERATE),
         JS_FN("isViewRunning", js_crossapp_CAViewController_isViewRunning, 0, JSPROP_PERMANENT | JSPROP_ENUMERATE),
-        JS_FN("viewDidLoad", js_crossapp_CAViewController_viewDidLoad, 0, JSPROP_PERMANENT | JSPROP_ENUMERATE),
+        //JS_FN("viewDidLoad", js_crossapp_CAViewController_viewDidLoad, 0, JSPROP_PERMANENT | JSPROP_ENUMERATE),
         JS_FN("presentModalViewController", js_crossapp_CAViewController_presentModalViewController, 2, JSPROP_PERMANENT | JSPROP_ENUMERATE),
         JS_FN("setViewVisibleTrue", js_crossapp_CAViewController_setViewVisibleTrue, 0, JSPROP_PERMANENT | JSPROP_ENUMERATE),
         JS_FN("init", js_crossapp_CAViewController_init, 0, JSPROP_PERMANENT | JSPROP_ENUMERATE),

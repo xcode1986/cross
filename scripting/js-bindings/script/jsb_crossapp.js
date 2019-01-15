@@ -571,7 +571,7 @@ ca.DLayout = {
         return this.set(ca.DHorizontalLayout.zero(), ca.DVerticalLayout.zero());
     },
 };
-
+ca.DLayoutFill=ca.DLayout.fill();
 ca.CAFont = {
 
     create: function()

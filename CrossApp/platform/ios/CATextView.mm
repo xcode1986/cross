@@ -48,7 +48,7 @@ static std::map<CrossApp::CATextView*, std::function<void()> > s_DidChangeText_m
     _iosTextView = [[[UITextView alloc]initWithFrame:[self bounds]] autorelease];
     _iosTextView.backgroundColor = nil;
     _iosTextView.delegate = self;
-    iosTextView.scrollEnabled=true;//modify by zmr add
+    _iosTextView.scrollEnabled=true;//modify by zmr add
     _iosTextView.layoutManager.allowsNonContiguousLayout = NO;//modify by zmr add
     [self addSubview:_iosTextView];
     

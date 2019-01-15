@@ -1168,7 +1168,17 @@ bool ScriptingCore::executeFunctionWithOwner(jsval owner, const char *name, cons
             }
             
             bRet = JS_CallFunctionName(cx, obj, name, args, retVal);
-            
+            if(string(name)=="viewDidLoad")
+            {
+                if(bRet)
+                {
+                    CCLog("js viewdidload 执行成功");
+                }
+                else
+                {
+                    CCLog("js viewdidload 执行失败");
+                }
+            }
         }
     }while(0);
     return bRet;
